@@ -69,6 +69,22 @@ int Heuristic(int x1, int y1, int x2, int y2) {
 }
 
 
+// TODO: Write CheckValidCell here. Check that the 
+// cell is on the grid and not an obstacle (i.e. equals kEmpty).
+bool CheckValidCell(int x, int y, vector<vector<State>> &grid) {
+    if (x < grid.size() && y < grid[0].size()) {
+        if (grid[x][y] == State::kEmpty) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        return false;
+    }
+}
+
 /** 
  * Add a node to the open list and mark it as open. 
  */
@@ -93,26 +109,24 @@ vector<vector<State>> Search(vector<vector<State>> grid, int init[2], int goal[2
   int h = Heuristic(x, y, goal[0],goal[1]);
   AddToOpen(x, y, g, h, open, grid);
 
-  // TODO: while open vector is non empty {
-    while (open.size()) {
-    // TODO: Sort the open list using CellSort, and get the current node.
-        CellSort(&open);
-        auto current = open.back();
-        open.pop_back();
-    // TODO: Get the x and y values from the current node,
-    // and set grid[x][y] to kPath.
-        x = current[0];
-        y = current[1];
-        grid[x][y] = State::kPath;
-    // TODO: Check if you've reached the goal. If so, return grid.  
-        if (x == goal[0] && y == goal[1]) {
-            return grid;
-        }
-    // If we're not done, expand search to current node's neighbors. This step will be completed in a later quiz.
-    // ExpandNeighbors
-  
-  //} // TODO: End while loop
+  while (open.size() > 0) {
+    // Get the next node
+    CellSort(&open);
+    auto current = open.back();
+    open.pop_back();
+    x = current[0];
+    y = current[1];
+    grid[x][y] = State::kPath;
+
+    // Check if we're done.
+    if (x == goal[0] && y == goal[1]) {
+      return grid;
     }
+    
+    // If we're not done, expand search to current node's neighbors.
+    // ExpandNeighbors
+  }
+  
   // We've run out of new nodes to explore and haven't found a path.
   cout << "No path found!" << "\n";
   return std::vector<vector<State>>{};
@@ -283,6 +297,33 @@ void TestSearch() {
   } else {
     cout << "passed" << "\n";
   }
+  return;
+}
+
+void TestCheckValidCell() {
+  cout << "----------------------------------------------------------" << "\n";
+  cout << "CheckValidCell Function Test: ";
+  vector<vector<State>> grid{{State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kClosed, State::kClosed, State::kEmpty, State::kEmpty, State::kObstacle, State::kEmpty}};
+
+  if (CheckValidCell(0, 0, grid)) {
+    cout << "failed" << "\n";
+    cout << "\n" << "Test grid is: " << "\n";
+    PrintVectorOfVectors(grid);
+    cout << "Cell checked: (0, 0)" << "\n";
+    cout << "\n";
+  } else if (!CheckValidCell(4, 2, grid)) {
+    cout << "failed" << "\n";
+    cout << "\n" << "Test grid is: " << "\n";
+    PrintVectorOfVectors(grid);
+    cout << "Cell checked: (4, 2)" << "\n";
+    cout << "\n";
+  } else {
+    cout << "passed" << "\n";
+  }
   cout << "----------------------------------------------------------" << "\n";
 }
 
@@ -297,4 +338,5 @@ int main() {
   TestAddToOpen();
   TestCompare();
   TestSearch();
+  TestCheckValidCell();
 }

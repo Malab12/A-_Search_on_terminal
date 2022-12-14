@@ -48,23 +48,33 @@ int Heuristic(int x1, int y1, int x2, int y2) {
   return abs(x2 - x1) + abs(y2 - y1);
 }
 
-// TODO: Write the AddToOpen function here.
-void AddToOpen(int x, int y, int g, int h, vector<vector<int>> &open, vector<vector<State>> &board) {
-    vector<int> node{x, y, g, h};
-    open.push_back(node);
-    board[x][y] = State::kClosed;
+
+//Add a node to the open list and mark it as open. 
+void AddToOpen(int x, int y, int g, int h, vector<vector<int>> &openlist, vector<vector<State>> &grid) {
+  // Add node to open vector, and mark grid cell as closed.
+  openlist.push_back(vector<int>{x, y, g, h});
+  grid[x][y] = State::kClosed;
 }
+
 
 /** 
  * Implementation of A* search algorithm
  */
 vector<vector<State>> Search(vector<vector<State>> grid, int init[2], int goal[2]) {
-
+  // Create the vector of open nodes.
+  vector<vector<int>> open {};
+  
+  // TODO: Initialize the starting node. 
+  int x = init[0];
+  int y = init[1];
+  int g = 0;
+  int h = Heuristic(x, y, goal[0], goal[1]);
+  AddToOpen(x, y, g, h, open, grid);
+  // TODO: Use AddToOpen to add the starting node to the open vector.
 
   cout << "No path found!" << "\n";
-  return std::vector<vector<State>> {};
+  return std::vector<vector<State>>{};
 }
-
 
 string CellString(State cell) {
   switch(cell) {
@@ -82,7 +92,6 @@ void PrintBoard(const vector<vector<State>> board) {
     cout << "\n";
   }
 }
-
 
 void PrintVectorOfVectors(vector<vector<int>> v) {
   for (auto row : v) {
@@ -104,7 +113,6 @@ void PrintVectorOfVectors(vector<vector<State>> v) {
   }
 }
 
-
 void TestHeuristic() {
   cout << "----------------------------------------------------------" << "\n";
   cout << "Heuristic Function Test: ";
@@ -124,7 +132,6 @@ void TestHeuristic() {
   return;
 }
 
-
 void TestAddToOpen() {
   cout << "----------------------------------------------------------" << "\n";
   cout << "AddToOpen Function Test: ";
@@ -135,11 +142,11 @@ void TestAddToOpen() {
   vector<vector<int>> open{{0, 0, 2, 9}, {1, 0, 2, 2}, {2, 0, 2, 4}};
   vector<vector<int>> solution_open = open; 
   solution_open.push_back(vector<int>{3, 0, 5, 7});
-  vector<vector<State>> grid{{State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+vector<vector<State>> grid{{State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
                             {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
                             {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
-                            {State::kEmpty, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
-                            {State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty, State::kObstacle, State::kEmpty}};
+                            {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kClosed, State::kClosed, State::kEmpty, State::kEmpty, State::kObstacle, State::kEmpty}};
   vector<vector<State>> solution_grid = grid;
   solution_grid[3][0] = State::kClosed;
   AddToOpen(x, y, g, h, open, grid);
@@ -166,7 +173,6 @@ void TestAddToOpen() {
   cout << "----------------------------------------------------------" << "\n";
   return;
 }
-
 
 int main() {
   int init[2]{0, 0};

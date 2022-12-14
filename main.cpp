@@ -1,3 +1,4 @@
+#include <algorithm>  // for sort
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -6,11 +7,12 @@
 using std::cout;
 using std::ifstream;
 using std::istringstream;
+using std::sort;
 using std::string;
 using std::vector;
 using std::abs;
 
-enum class State {kEmpty, kObstacle, kClosed};
+enum class State {kEmpty, kObstacle, kClosed, kPath};
 
 
 vector<State> ParseLine(string line) {
@@ -42,12 +44,24 @@ vector<vector<State>> ReadBoardFile(string path) {
   return board;
 }
 
-// TODO: Write function to compare the f-value of two nodes here
-bool Compare(vector<int> a, vector<int> b) {
-    int f1 = a[2] + a[3];
-    int f2 = b[2] + b[3];
-    return f1 > f2;
+
+/**
+ * Compare the F values of two cells.
+ */
+bool Compare(const vector<int> a, const vector<int> b) {
+  int f1 = a[2] + a[3]; // f1 = g1 + h1
+  int f2 = b[2] + b[3]; // f2 = g2 + h2
+  return f1 > f2; 
 }
+
+
+/**
+ * Sort the two-dimensional vector of ints in descending order.
+ */
+void CellSort(vector<vector<int>> *v) {
+  sort(v->begin(), v->end(), Compare);
+}
+
 
 // Calculate the manhattan distance
 int Heuristic(int x1, int y1, int x2, int y2) {
@@ -79,6 +93,27 @@ vector<vector<State>> Search(vector<vector<State>> grid, int init[2], int goal[2
   int h = Heuristic(x, y, goal[0],goal[1]);
   AddToOpen(x, y, g, h, open, grid);
 
+  // TODO: while open vector is non empty {
+    while (open.size()) {
+    // TODO: Sort the open list using CellSort, and get the current node.
+        CellSort(&open);
+        auto current = open.back();
+        open.pop_back();
+    // TODO: Get the x and y values from the current node,
+    // and set grid[x][y] to kPath.
+        x = current[0];
+        y = current[1];
+        grid[x][y] = State::kPath;
+    // TODO: Check if you've reached the goal. If so, return grid.  
+        if (x == goal[0] && y == goal[1]) {
+            return grid;
+        }
+    // If we're not done, expand search to current node's neighbors. This step will be completed in a later quiz.
+    // ExpandNeighbors
+  
+  //} // TODO: End while loop
+    }
+  // We've run out of new nodes to explore and haven't found a path.
   cout << "No path found!" << "\n";
   return std::vector<vector<State>>{};
 }
@@ -87,6 +122,7 @@ vector<vector<State>> Search(vector<vector<State>> grid, int init[2], int goal[2
 string CellString(State cell) {
   switch(cell) {
     case State::kObstacle: return "⛰️   ";
+    case State::kPath: return "🚗   ";
     default: return "0   "; 
   }
 }
@@ -109,7 +145,6 @@ void PrintVector(vector<int> v) {
   cout << "}" << "\n";
 }
 
-
 void PrintVectorOfVectors(vector<vector<int>> v) {
   for (auto row : v) {
     cout << "{ ";
@@ -120,7 +155,6 @@ void PrintVectorOfVectors(vector<vector<int>> v) {
   }
 }
 
-
 void PrintVectorOfVectors(vector<vector<State>> v) {
   for (auto row : v) {
     cout << "{ ";
@@ -130,7 +164,6 @@ void PrintVectorOfVectors(vector<vector<State>> v) {
     cout << "}" << "\n";
   }
 }
-
 
 void TestHeuristic() {
   cout << "----------------------------------------------------------" << "\n";
@@ -150,7 +183,6 @@ void TestHeuristic() {
   }
   return;
 }
-
 
 void TestAddToOpen() {
   cout << "----------------------------------------------------------" << "\n";
@@ -193,7 +225,6 @@ void TestAddToOpen() {
   return;
 }
 
-
 void TestCompare() {
   cout << "----------------------------------------------------------" << "\n";
   cout << "Compare Function Test: ";
@@ -222,10 +253,38 @@ void TestCompare() {
   } else {
     cout << "passed" << "\n";
   }
-  cout << "----------------------------------------------------------" << "\n";
   return;
 }
 
+void TestSearch() {
+  cout << "----------------------------------------------------------" << "\n";
+  cout << "Search Function Test (Partial): ";
+  int goal[2]{4, 5};
+  auto board = ReadBoardFile("1.board");
+  
+  std::cout.setstate(std::ios_base::failbit); // Disable cout
+  auto output = Search(board, goal, goal);
+  std::cout.clear(); // Enable cout
+
+  vector<vector<State>> solution{{State::kEmpty, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kEmpty, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kEmpty, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kEmpty, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty, State::kObstacle, State::kPath}};
+
+  if (output != solution) {
+    cout << "failed" << "\n";
+    cout << "Search(board, {4,5}, {4,5})" << "\n";
+    cout << "Solution board: " << "\n";
+    PrintVectorOfVectors(solution);
+    cout << "Your board: " << "\n";
+    PrintVectorOfVectors(output);
+    cout << "\n";
+  } else {
+    cout << "passed" << "\n";
+  }
+  cout << "----------------------------------------------------------" << "\n";
+}
 
 int main() {
   int init[2]{0, 0};
@@ -237,4 +296,5 @@ int main() {
   TestHeuristic();
   TestAddToOpen();
   TestCompare();
+  TestSearch();
 }

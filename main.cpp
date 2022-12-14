@@ -14,6 +14,9 @@ using std::abs;
 
 enum class State {kEmpty, kObstacle, kClosed, kPath};
 
+// directional deltas
+const int delta[4][2]{{-1, 0}, {0, -1}, {1, 0}, {0, 1}};
+
 
 vector<State> ParseLine(string line) {
     istringstream sline(line);
@@ -69,21 +72,17 @@ int Heuristic(int x1, int y1, int x2, int y2) {
 }
 
 
-// TODO: Write CheckValidCell here. Check that the 
-// cell is on the grid and not an obstacle (i.e. equals kEmpty).
+/** 
+ * Check that a cell is valid: on the grid, not an obstacle, and clear. 
+ */
 bool CheckValidCell(int x, int y, vector<vector<State>> &grid) {
-    if (x < grid.size() && y < grid[0].size()) {
-        if (grid[x][y] == State::kEmpty) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-    else {
-        return false;
-    }
+  bool on_grid_x = (x >= 0 && x < grid.size());
+  bool on_grid_y = (y >= 0 && y < grid[0].size());
+  if (on_grid_x && on_grid_y)
+    return grid[x][y] == State::kEmpty;
+  return false;
 }
+
 
 /** 
  * Add a node to the open list and mark it as open. 
@@ -94,6 +93,31 @@ void AddToOpen(int x, int y, int g, int h, vector<vector<int>> &openlist, vector
   grid[x][y] = State::kClosed;
 }
 
+
+/** 
+ * Expand current nodes's neighbors and add them to the open list.
+ */
+void ExpandNeighbors(const vector<int> &current, int goal[2], vector<vector<int>> &open, vector<vector<State>> &grid) {
+// TODO: ExpandNeighbors(arguments) {
+
+  // TODO: Get current node's data.
+    int x = current[0];
+    int y = current[1];
+    int g = current[2];
+  // TODO: Loop through current node's potential neighbors.
+    for (int i = 0; i < 4; i++) {
+        int x2 = x + delta[i][0];
+        int y2 = y + delta[i][1];
+    // TODO: Check that the potential neighbor's x2 and y2 values are on the grid and not closed.
+    if (CheckValidCell(x2, y2, grid)) {
+        int g2 = g + 1;
+        int h2 = Heuristic(x2, y2, goal[0], goal[1]);
+        AddToOpen(x2, y2, g2, h2, open, grid);
+    }
+      // TODO: Increment g value, compute h value, and add neighbor to open list.
+    }
+// } TODO: End the function
+}
 
 /** 
  * Implementation of A* search algorithm
@@ -124,7 +148,7 @@ vector<vector<State>> Search(vector<vector<State>> grid, int init[2], int goal[2
     }
     
     // If we're not done, expand search to current node's neighbors.
-    // ExpandNeighbors
+    ExpandNeighbors(current, goal, open, grid);
   }
   
   // We've run out of new nodes to explore and haven't found a path.
@@ -272,23 +296,24 @@ void TestCompare() {
 
 void TestSearch() {
   cout << "----------------------------------------------------------" << "\n";
-  cout << "Search Function Test (Partial): ";
+  cout << "Search Function Test: ";
+  int init[2]{0, 0};
   int goal[2]{4, 5};
   auto board = ReadBoardFile("1.board");
   
   std::cout.setstate(std::ios_base::failbit); // Disable cout
-  auto output = Search(board, goal, goal);
+  auto output = Search(board, init, goal);
   std::cout.clear(); // Enable cout
 
-  vector<vector<State>> solution{{State::kEmpty, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
-                            {State::kEmpty, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
-                            {State::kEmpty, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
-                            {State::kEmpty, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
-                            {State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty, State::kObstacle, State::kPath}};
+  vector<vector<State>> solution{{State::kPath, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kPath, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kPath, State::kObstacle, State::kEmpty, State::kClosed, State::kClosed, State::kClosed},
+                            {State::kPath, State::kObstacle, State::kClosed, State::kPath, State::kPath, State::kPath},
+                            {State::kPath, State::kPath, State::kPath, State::kPath, State::kObstacle, State::kPath}};
 
   if (output != solution) {
     cout << "failed" << "\n";
-    cout << "Search(board, {4,5}, {4,5})" << "\n";
+    cout << "Search(board, {0,0}, {4,5})" << "\n";
     cout << "Solution board: " << "\n";
     PrintVectorOfVectors(solution);
     cout << "Your board: " << "\n";
@@ -324,7 +349,50 @@ void TestCheckValidCell() {
   } else {
     cout << "passed" << "\n";
   }
+}
+
+void TestExpandNeighbors() {
   cout << "----------------------------------------------------------" << "\n";
+  cout << "ExpandNeighbors Function Test: ";
+  vector<int> current{4, 2, 7, 3};
+  int goal[2] {4, 5};
+  vector<vector<int>> open{{4, 2, 7, 3}};
+  vector<vector<int>> solution_open = open;
+  solution_open.push_back(vector<int>{3, 2, 8, 4});
+  solution_open.push_back(vector<int>{4, 3, 8, 2});
+  vector<vector<State>> grid{{State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kClosed, State::kClosed, State::kEmpty, State::kEmpty, State::kObstacle, State::kEmpty}};
+  vector<vector<State>> solution_grid = grid;
+  solution_grid[3][2] = State::kClosed;
+  solution_grid[4][3] = State::kClosed;
+  ExpandNeighbors(current, goal, open, grid);
+  CellSort(&open);
+  CellSort(&solution_open);
+  if (open != solution_open) {
+    cout << "failed" << "\n";
+    cout << "\n";
+    cout << "Your open list is: " << "\n";
+    PrintVectorOfVectors(open);
+    cout << "Solution open list is: " << "\n";
+    PrintVectorOfVectors(solution_open);
+    cout << "\n";
+  } else if (grid != solution_grid) {
+    cout << "failed" << "\n";
+    cout << "\n";
+    cout << "Your grid is: " << "\n";
+    PrintVectorOfVectors(grid);
+    cout << "\n";
+    cout << "Solution grid is: " << "\n";
+    PrintVectorOfVectors(solution_grid);
+    cout << "\n";
+  } else {
+  	cout << "passed" << "\n";
+  }
+  cout << "----------------------------------------------------------" << "\n";
+  return;
 }
 
 int main() {
@@ -339,4 +407,5 @@ int main() {
   TestCompare();
   TestSearch();
   TestCheckValidCell();
+  TestExpandNeighbors();
 }

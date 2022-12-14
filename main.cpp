@@ -42,6 +42,12 @@ vector<vector<State>> ReadBoardFile(string path) {
   return board;
 }
 
+// TODO: Write function to compare the f-value of two nodes here
+bool Compare(vector<int> a, vector<int> b) {
+    int f1 = a[2] + a[3];
+    int f2 = b[2] + b[3];
+    return f1 > f2;
+}
 
 // Calculate the manhattan distance
 int Heuristic(int x1, int y1, int x2, int y2) {
@@ -49,7 +55,9 @@ int Heuristic(int x1, int y1, int x2, int y2) {
 }
 
 
-//Add a node to the open list and mark it as open. 
+/** 
+ * Add a node to the open list and mark it as open. 
+ */
 void AddToOpen(int x, int y, int g, int h, vector<vector<int>> &openlist, vector<vector<State>> &grid) {
   // Add node to open vector, and mark grid cell as closed.
   openlist.push_back(vector<int>{x, y, g, h});
@@ -64,17 +72,17 @@ vector<vector<State>> Search(vector<vector<State>> grid, int init[2], int goal[2
   // Create the vector of open nodes.
   vector<vector<int>> open {};
   
-  // TODO: Initialize the starting node. 
+  // Initialize the starting node.
   int x = init[0];
   int y = init[1];
   int g = 0;
-  int h = Heuristic(x, y, goal[0], goal[1]);
+  int h = Heuristic(x, y, goal[0],goal[1]);
   AddToOpen(x, y, g, h, open, grid);
-  // TODO: Use AddToOpen to add the starting node to the open vector.
 
   cout << "No path found!" << "\n";
   return std::vector<vector<State>>{};
 }
+
 
 string CellString(State cell) {
   switch(cell) {
@@ -93,6 +101,15 @@ void PrintBoard(const vector<vector<State>> board) {
   }
 }
 
+void PrintVector(vector<int> v) {
+  cout << "{ ";
+  for (auto item : v) {
+    cout << item << " ";
+  }
+  cout << "}" << "\n";
+}
+
+
 void PrintVectorOfVectors(vector<vector<int>> v) {
   for (auto row : v) {
     cout << "{ ";
@@ -103,6 +120,7 @@ void PrintVectorOfVectors(vector<vector<int>> v) {
   }
 }
 
+
 void PrintVectorOfVectors(vector<vector<State>> v) {
   for (auto row : v) {
     cout << "{ ";
@@ -112,6 +130,7 @@ void PrintVectorOfVectors(vector<vector<State>> v) {
     cout << "}" << "\n";
   }
 }
+
 
 void TestHeuristic() {
   cout << "----------------------------------------------------------" << "\n";
@@ -132,6 +151,7 @@ void TestHeuristic() {
   return;
 }
 
+
 void TestAddToOpen() {
   cout << "----------------------------------------------------------" << "\n";
   cout << "AddToOpen Function Test: ";
@@ -142,11 +162,11 @@ void TestAddToOpen() {
   vector<vector<int>> open{{0, 0, 2, 9}, {1, 0, 2, 2}, {2, 0, 2, 4}};
   vector<vector<int>> solution_open = open; 
   solution_open.push_back(vector<int>{3, 0, 5, 7});
-vector<vector<State>> grid{{State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+  vector<vector<State>> grid{{State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
                             {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
                             {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
-                            {State::kClosed, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
-                            {State::kClosed, State::kClosed, State::kEmpty, State::kEmpty, State::kObstacle, State::kEmpty}};
+                            {State::kEmpty, State::kObstacle, State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty},
+                            {State::kEmpty, State::kEmpty, State::kEmpty, State::kEmpty, State::kObstacle, State::kEmpty}};
   vector<vector<State>> solution_grid = grid;
   solution_grid[3][0] = State::kClosed;
   AddToOpen(x, y, g, h, open, grid);
@@ -170,9 +190,42 @@ vector<vector<State>> grid{{State::kClosed, State::kObstacle, State::kEmpty, Sta
   } else {
     cout << "passed" << "\n";
   }
+  return;
+}
+
+
+void TestCompare() {
+  cout << "----------------------------------------------------------" << "\n";
+  cout << "Compare Function Test: ";
+  vector<int> test_1 {1, 2, 5, 6};
+  vector<int> test_2 {1, 3, 5, 7};
+  vector<int> test_3 {1, 2, 5, 8};
+  vector<int> test_4 {1, 3, 5, 7};
+  if (Compare(test_1, test_2)) {
+    cout << "failed" << "\n";
+    cout << "\n" << "a = ";
+    PrintVector(test_1);
+    cout << "b = ";
+    PrintVector(test_2);
+    cout << "Compare(a, b): " << Compare(test_1, test_2) << "\n";
+    cout << "Correct answer: 0" << "\n";
+    cout << "\n";
+  } else if (!Compare(test_3, test_4)) {
+    cout << "failed" << "\n";
+    cout << "\n" << "a = ";
+    PrintVector(test_3);
+    cout << "b = ";
+    PrintVector(test_4);
+    cout << "Compare(a, b): " << Compare(test_3, test_4) << "\n";
+    cout << "Correct answer: 1" << "\n";
+    cout << "\n";
+  } else {
+    cout << "passed" << "\n";
+  }
   cout << "----------------------------------------------------------" << "\n";
   return;
 }
+
 
 int main() {
   int init[2]{0, 0};
@@ -183,4 +236,5 @@ int main() {
   // Tests
   TestHeuristic();
   TestAddToOpen();
+  TestCompare();
 }
